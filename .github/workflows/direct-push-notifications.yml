@@ -1,0 +1,50 @@
+name: Direct Push Notifications
+
+on:
+  workflow_call:
+    secrets:
+      SLACK_WEBHOOK_URL:
+        required: true
+
+jobs:
+  notify:
+    name: Notify Slack
+    runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+    steps:
+      - name: Direct Push to Main
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          webhook: ${{ env.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "⚠️ ${{ github.event.repository.name }} — Direct push to main", "emoji": true }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Pushed by:*\n${{ github.event.pusher.name }}" },
+                    { "type": "mrkdwn", "text": "*Branch:*\n`${{ github.event.ref }}`" }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format('*Latest commit:*\n<{0}|`{1}`> — {2}', github.event.head_commit.url, github.event.head_commit.id, github.event.head_commit.message)) }}
+                  }
+                },
+                {
+                  "type": "context",
+                  "elements": [
+                    { "type": "mrkdwn", "text": "This push bypassed the pull request process." }
+                  ]
+                }
+              ]
+            }

@@ -1,0 +1,259 @@
+name: PR Status Notifications
+
+on:
+  workflow_call:
+    secrets:
+      SLACK_WEBHOOK_URL:
+        required: true
+
+jobs:
+  notify:
+    name: Notify Slack
+    runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+    steps:
+      - name: PR Opened
+        if: github.event_name == 'pull_request' && github.event.action == 'opened'
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          webhook: ${{ env.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "🆕 ${{ github.event.repository.name }} — New PR opened", "emoji": true }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format('*<{0}|{1}>*', github.event.pull_request.html_url, github.event.pull_request.title)) }}
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Author:*\n${{ github.event.pull_request.user.login }}" },
+                    { "type": "mrkdwn", "text": "*Branch:*\n`${{ github.event.pull_request.head.ref }}` → `${{ github.event.pull_request.base.ref }}`" }
+                  ]
+                }
+              ]
+            }
+
+      - name: PR Merged
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          webhook: ${{ env.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "✅ ${{ github.event.repository.name }} — PR merged", "emoji": true }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format('*<{0}|{1}>*', github.event.pull_request.html_url, github.event.pull_request.title)) }}
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Merged by:*\n${{ github.event.pull_request.merged_by.login }}" },
+                    { "type": "mrkdwn", "text": "*Into:*\n`${{ github.event.pull_request.base.ref }}`" }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": { "type": "mrkdwn", "text": "👇 *Don't forget to pull!*\n```git pull origin ${{ github.event.pull_request.base.ref }}```" }
+                }
+              ]
+            }
+
+      - name: PR Closed Without Merge
+        if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == false
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          webhook: ${{ env.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "🚫 ${{ github.event.repository.name }} — PR closed without merging", "emoji": true }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format('*<{0}|{1}>*', github.event.pull_request.html_url, github.event.pull_request.title)) }}
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Closed by:*\n${{ github.event.pull_request.user.login }}" },
+                    { "type": "mrkdwn", "text": "*Branch:*\n`${{ github.event.pull_request.head.ref }}`" }
+                  ]
+                }
+              ]
+            }
+
+      - name: Review Requested (User)
+        if: github.event_name == 'pull_request' && github.event.action == 'review_requested' && github.event.requested_reviewer != null
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          webhook: ${{ env.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "👀 ${{ github.event.repository.name }} — Review requested", "emoji": true }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format('*<{0}|{1}>*', github.event.pull_request.html_url, github.event.pull_request.title)) }}
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Requested by:*\n${{ github.event.pull_request.user.login }}" },
+                    { "type": "mrkdwn", "text": "*Reviewer:*\n${{ github.event.requested_reviewer.login }}" }
+                  ]
+                }
+              ]
+            }
+
+      - name: Review Requested (Team)
+        if: github.event_name == 'pull_request' && github.event.action == 'review_requested' && github.event.requested_team != null
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          webhook: ${{ env.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "👀 ${{ github.event.repository.name }} — Review requested", "emoji": true }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format('*<{0}|{1}>*', github.event.pull_request.html_url, github.event.pull_request.title)) }}
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Requested by:*\n${{ github.event.pull_request.user.login }}" },
+                    { "type": "mrkdwn", "text": "*Reviewer:*\n${{ github.event.requested_team.name }}" }
+                  ]
+                }
+              ]
+            }
+
+      - name: Review Approved
+        if: github.event_name == 'pull_request_review' && github.event.review.state == 'approved'
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          webhook: ${{ env.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "✔️ ${{ github.event.repository.name }} — PR approved", "emoji": true }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format('*<{0}|{1}>*', github.event.pull_request.html_url, github.event.pull_request.title)) }}
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Approved by:*\n${{ github.event.review.user.login }}" },
+                    { "type": "mrkdwn", "text": "*Author:*\n${{ github.event.pull_request.user.login }}" }
+                  ]
+                }
+              ]
+            }
+
+      - name: Changes Requested
+        if: github.event_name == 'pull_request_review' && github.event.review.state == 'changes_requested'
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          webhook: ${{ env.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "🔁 ${{ github.event.repository.name }} — Changes requested", "emoji": true }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format('*<{0}|{1}>*', github.event.pull_request.html_url, github.event.pull_request.title)) }}
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Reviewer:*\n${{ github.event.review.user.login }}" },
+                    { "type": "mrkdwn", "text": "*Author:*\n${{ github.event.pull_request.user.login }}" }
+                  ]
+                }
+              ]
+            }
+
+      - name: Ready for Review
+        if: github.event_name == 'pull_request' && github.event.action == 'ready_for_review'
+        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        with:
+          webhook: ${{ env.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": { "type": "plain_text", "text": "🙋 ${{ github.event.repository.name }} — PR ready for review", "emoji": true }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format('*<{0}|{1}>*', github.event.pull_request.html_url, github.event.pull_request.title)) }}
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Author:*\n${{ github.event.pull_request.user.login }}" },
+                    { "type": "mrkdwn", "text": "*Branch:*\n`${{ github.event.pull_request.head.ref }}` → `${{ github.event.pull_request.base.ref }}`" }
+                  ]
+                }
+              ]
+            }
