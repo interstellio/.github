@@ -44,7 +44,7 @@ Alerts when someone pushes directly to `main` without a pull request.
 
 **Events covered:**
 
-- Direct push to `main` (excludes PR merge commits and squash-merge commits)
+- Direct push to `main` 
 
 ## Direct Push Stub
 
@@ -59,9 +59,6 @@ on:
 
 jobs:
   notify:
-    if: >-
-      !startsWith(github.event.head_commit.message, 'Merge pull request')
-      && !contains(github.event.head_commit.message, '(#')
     uses: interstellio/.github/.github/workflows/direct-push-notifications.yml@main
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
