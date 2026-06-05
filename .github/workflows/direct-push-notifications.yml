@@ -10,9 +10,6 @@ jobs:
   notify:
     name: Notify Slack
     runs-on: ubuntu-latest
-    if: >-
-      !startsWith(github.event.head_commit.message, 'Merge pull request')
-      && !contains(github.event.head_commit.message, '(#')
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
