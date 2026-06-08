@@ -30,21 +30,21 @@ jobs:
                   "type": "section",
                   "fields": [
                     { "type": "mrkdwn", "text": "*Pushed by:*\n${{ github.event.pusher.name }}" },
-                    { "type": "mrkdwn", "text": "*Branch:*\n`${{ github.event.ref }}`" }
+                    { "type": "mrkdwn", "text": "*Branch:*\n`${{ github.ref_name }}`" }
                   ]
                 },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ${{ toJSON(format('*Latest commit:*\n<{0}|{1}>', github.event.head_commit.url, github.event.head_commit.id)) }}
+                    "text": "*Latest commit:*\n<${{ github.event.head_commit.url }}|${{ github.event.head_commit.id }}>"
                   }
                 },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ${{ toJSON(format('*Commit message:*\n{0}', github.event.head_commit.message)) }}
+                    "text": "*Commit message:*\n${{ github.event.head_commit.message }}"
                   }
                 },
                 {
