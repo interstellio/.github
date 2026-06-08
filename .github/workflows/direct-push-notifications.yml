@@ -37,13 +37,27 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ${{ toJSON(format('*Latest commit:*\n<{0}|`{1}`> — {2}', github.event.head_commit.url, github.event.head_commit.id, github.event.head_commit.message)) }}
+                    "text": ${{ toJSON(format('*Latest commit:*\n<{0}|{1}>', github.event.head_commit.url, github.event.head_commit.id)) }}
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format('*Commit message:*\n{0}', github.event.head_commit.message)) }}
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Pull latest changes:*\n```git pull origin ${{ github.ref_name }}```"
                   }
                 },
                 {
                   "type": "context",
                   "elements": [
-                    { "type": "mrkdwn", "text": "This push bypassed the pull request process." }
+                    { "type": "mrkdwn", "text": "This push bypassed the pull request process. Please pull to stay up to date." }
                   ]
                 }
               ]
